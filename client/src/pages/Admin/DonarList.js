@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Layout from '../../components/shared/Layout/Layout';
 import API from '../../services/API';
 import moment from 'moment';
-import { useNavigate } from 'react-router-dom';
 
 const DonarList = () => {
     const [data, setData] = useState([]);
-    const navigate = useNavigate();
     
     // find donar records
     const getDonars = async () => {
@@ -38,10 +36,6 @@ const DonarList = () => {
       }
     }
 
-    const handleDetails = () => {
-      navigate('/details-donar-list');
-    };
-
   return (
     <Layout>
         <div className='container mt-4'>
@@ -63,9 +57,7 @@ const DonarList = () => {
                             <td>{record.bloodGroup}</td>
                             <td>{record.phone}</td>
                             <td>{moment(record.createdAt).format('DD/MM/YYYY hh:mm A')}</td>
-                            {/* <td>
-                              <button className='btn btn-success' onClick={() => handleDetails(record._id)}>Details</button>
-                            </td> */}
+                            
                             <td>
                               <button className='btn btn-danger' onClick={() => handleDelete(record._id)}>Delete</button>
                             </td>
