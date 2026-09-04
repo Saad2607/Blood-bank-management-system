@@ -1,26 +1,28 @@
 {
-  "name": "blood-bank-management-system",
-  "version": "1.0.0",
-  "description": "Blood bank management system",
-  "main": "server.js",
+  "name": "pulse-point-server",
+  "version": "2.0.0",
+  "description": "Pulse Point Blood Bank Management System - Backend API",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "nodemon server.js",
-    "client": "npm start --prefix ../client",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "start": "node src/server.js",
+    "server": "nodemon src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/utils/seeder.js",
+    "test": "node test_api.js && node e2e_workflow_test.js"
   },
-  "author": "Saad Shaikh",
+  "author": "Pulse Point Team",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "colors": "^1.4.0",
-    "concurrently": "^9.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.2",
-    "morgan": "^1.10.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.7"
   }
 }

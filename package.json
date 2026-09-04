@@ -1,0 +1,27 @@
+{
+  "name": "pulse-point",
+  "version": "2.0.0",
+  "description": "Pulse Point - Modern Blood Bank Management System (Full-Stack MERN)",
+  "private": true,
+  "scripts": {
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "dev": "npm --prefix server run dev",
+    "start": "node server/src/server.js",
+    "seed": "npm --prefix server run seed",
+    "test": "npm --prefix server test",
+    "build": "npm --prefix client run build"
+  },
+  "keywords": [
+    "blood-bank",
+    "hospital-management",
+    "mern",
+    "react",
+    "express",
+    "mongodb",
+    "vite",
+    "tailwind"
+  ],
+  "author": "Saad",
+  "license": "MIT"
+}
