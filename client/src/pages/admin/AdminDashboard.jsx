@@ -24,6 +24,8 @@ import {
   Activity,
   Droplets,
   ArrowRight,
+  Calendar,
+  HeartPulse,
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -133,6 +135,100 @@ const AdminDashboard = () => {
           icon={Boxes}
           color="blue"
         />
+      </div>
+
+      {/* Super Admin Enterprise Command Consoles */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-purple-600" />
+            <span>Operational Command &amp; Oversight Consoles</span>
+          </h2>
+          <span className="text-xs text-slate-400 font-medium">Real-time cross-facility management</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Console 1: Hospital Orders */}
+          <Link
+            to="/admin/hospital-orders"
+            className="group bg-white rounded-2xl p-5 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                  {stats?.requests?.total || 0} Orders
+                </span>
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm mt-3 group-hover:text-blue-600 transition-colors">
+                Hospital Blood Orders &amp; Oversight
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Inspect clinical requisitions, urgent/routine deadlines, cold-chain dispatches, and execute administrative overrides.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+              <span>Access Orders Console</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Console 2: Global Stock */}
+          <Link
+            to="/admin/inventory"
+            className="group bg-white rounded-2xl p-5 border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Boxes className="w-5 h-5" />
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                  {stats?.inventory?.availableUnits || 0} Units
+                </span>
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm mt-3 group-hover:text-purple-600 transition-colors">
+                Global Stock &amp; BloodNet Discard Ledger
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Multi-center inventory ledger, component breakdowns, expiry countdowns, and Australian BloodNet wastage compliance logs.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-purple-600">
+              <span>Access Inventory Ledger</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Console 3: Donors & Collections */}
+          <Link
+            to="/admin/donors"
+            className="group bg-white rounded-2xl p-5 border border-slate-200 hover:border-rose-300 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <HeartPulse className="w-5 h-5" />
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                  {stats?.users?.donors || 0} Donors
+                </span>
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm mt-3 group-hover:text-rose-600 transition-colors">
+                Donor Community &amp; Phlebotomy
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Voluntary donor directory, cooldown eligibility, center appointment schedule, and 5-marker pathogen screening logs.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-rose-600">
+              <span>Manage Donors &amp; Bleeds</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        </div>
       </div>
 
       {/* Analytics Charts Grid */}

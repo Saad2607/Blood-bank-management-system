@@ -76,6 +76,24 @@ const bloodInventorySchema = new mongoose.Schema(
       ref: 'BloodRequest',
       default: null,
     },
+    discardReason: {
+      type: String,
+      enum: ['outdated', 'hemolyzed', 'temperature_breach', 'seropositive', 'seal_broken', 'clotted', 'other', null],
+      default: null,
+    },
+    discardDate: {
+      type: Date,
+      default: null,
+    },
+    discardNotes: {
+      type: String,
+      default: '',
+    },
+    discardedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
   },
   {
     timestamps: true,

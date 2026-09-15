@@ -15,6 +15,9 @@ import {
   ArrowRight,
   ShieldCheck,
   Building2,
+  FlaskConical,
+  Boxes,
+  Sparkles,
 } from 'lucide-react';
 
 const DonorDashboard = () => {
@@ -244,6 +247,107 @@ const DonorDashboard = () => {
 
           <div className="mt-6 pt-3 border-t border-slate-700 text-[10px] text-slate-500 text-center">
             Valid at all accredited Pulse Point blood bank facilities.
+          </div>
+        </div>
+      </div>
+
+      {/* Real-World Blood Journey Tracker (American Red Cross / Lifeblood Protocol) */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-slate-100 gap-2 mb-6">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-red-600 mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-red-500" />
+              <span>The Journey of Your Blood (Red Cross & Lifeblood Protocol)</span>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 tracking-tight">
+              How One Single Donation Saves Up To 3 Lives
+            </h3>
+          </div>
+          {history.length > 0 && (
+            <div className="text-left sm:text-right">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Latest Unit Trace</span>
+              <span className="text-xs font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
+                #{history[0].donationId}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+          {/* Stage 1 */}
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-7 h-7 rounded-lg bg-red-100 text-red-700 font-black text-xs flex items-center justify-center">
+                  1
+                </span>
+                <HeartPulse className="w-4 h-4 text-red-600" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900">Phlebotomy Collection</h4>
+              <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                450ml drawn into a sterile anticoagulant pack. Donor vitals logged.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-slate-200/60 text-[10px] font-semibold text-emerald-700">
+              ✓ 10-15 min draw
+            </div>
+          </div>
+
+          {/* Stage 2 */}
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-black text-xs flex items-center justify-center">
+                  2
+                </span>
+                <FlaskConical className="w-4 h-4 text-indigo-600" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900">Lab Testing & Separation</h4>
+              <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                Centrifuged into PRBC, Plasma, and Platelets. ELISA screened for viral markers.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-slate-200/60 text-[10px] font-semibold text-indigo-700">
+              ✓ 3 distinct components
+            </div>
+          </div>
+
+          {/* Stage 3 */}
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-7 h-7 rounded-lg bg-sky-100 text-sky-700 font-black text-xs flex items-center justify-center">
+                  3
+                </span>
+                <Boxes className="w-4 h-4 text-sky-600" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900">Cold-Chain Storage</h4>
+              <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                Quarantined and racked at 2°C–6°C. Barcode registered in central database.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-slate-200/60 text-[10px] font-semibold text-sky-700">
+              ✓ Continuous temp log
+            </div>
+          </div>
+
+          {/* Stage 4 */}
+          <div className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/80 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 font-black text-xs flex items-center justify-center">
+                  4
+                </span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-900">Hospital Transfusion</h4>
+              <p className="text-[11px] text-slate-600 mt-1 leading-snug">
+                Cross-matched and dispatched for emergency trauma, surgery, or oncology care.
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t border-emerald-200/60 text-[10px] font-bold text-emerald-700">
+              ✓ Up to 3 lives saved
+            </div>
           </div>
         </div>
       </div>

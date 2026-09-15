@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import { LoadingSpinner, EmptyState } from '../../components/common/LoadingSpinner';
 import { Building2, Plus, Phone, MapPin, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 const ManageHospitalsPage = () => {
+  const { toast } = useToast();
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -59,11 +61,12 @@ const ManageHospitalsPage = () => {
         emergencyContact,
       });
 
-      setSuccess(`Hospital ${name} registered successfully.`);
+      toast.success(`Hospital "${name}" registered successfully.`);
       setShowModal(false);
       fetchHospitals();
     } catch (err) {
       setError(err.message || 'Failed to register hospital.');
+      toast.error(err.message || 'Failed to register hospital.');
     } finally {
       setSubmitting(false);
     }

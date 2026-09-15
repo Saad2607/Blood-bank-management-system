@@ -49,6 +49,22 @@ In critical trauma and surgical care, timely access to compatible blood products
 - **Clinical Urgency Triage**: Hospital transfusion orders are classified into `Routine`, `Urgent`, and `Emergency` (<2 hours response).
 - **Cold-Chain Audit Logs**: Blood issuance requires verification of transport temperature (e.g. 4°C), ice-pack integrity, and courier identity.
 - **Immunohematology Engine**: Built-in cross-matching algorithms for ABO and Rh compatibility.
+- **Multi-Role In-App Notifications**: Real-time alerts for incoming emergency orders, critical stock shortages, and expiring units.
+- **Biosecure Wastage Auditing**: Standardized discard recording categorized by clinical cause (outdated, cold-chain breach, hemolysis, seropositivity).
+
+---
+
+## 🌐 Real-World Global Research & Architectural Standards
+
+Pulse Point's data models, triage algorithms, and clinical workflows are directly synthesized from in-depth research of live national blood systems across the globe:
+
+| National Platform | Agency & Region | Architectural Features Adopted into Pulse Point |
+| :--- | :--- | :--- |
+| **e-RaktKosh** | Ministry of Health & Family Welfare (India) | Public component availability search, multi-facility stock aggregation, real-time blood group filters. |
+| **NHSBT OBOS & Pulse** | NHS Blood and Transplant (United Kingdom) | Online Blood Ordering System (OBOS) workflow for hospital laboratories, scheduled routine delivery vs. STAT emergency runs, and central blood bank inventory engine. |
+| **BloodNet & Lifeblood** | National Blood Authority (Australia) | 3-tier clinical requisition triage (`Routine <24h`, `Urgent <12h`, `Emergency <2h`), unit barcode tracking, and biosecure wastage auditing categorized by standardized discard reason. |
+| **American Red Cross** | American Red Cross (United States) | 4-step "Blood Journey" progress transparency (Phlebotomy → Lab Separation → Cold-Chain Rack → Hospital Transfusion), digital donor ID cards, and component yield metrics. |
+| **Canadian Blood Services & SANBS** | Canada & South Africa | Cold-chain temperature validation thresholds (2°C–6°C for PRBC, -18°C for FFP), infectious disease screening clearance, and automated donor deferral cooldowns. |
 
 ---
 
@@ -85,7 +101,7 @@ Blood-bank-management-system/
 │   ├── public/                 # Favicon (SVG blood droplet + pulse)
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/         # Navbar, Footer, Sidebar, StatCard, BloodBadge, StatusBadge, CompatibilityMatrix
+│   │   │   ├── common/         # Navbar, NotificationBell, Footer, Sidebar, StatCard, BloodBadge, StatusBadge, CompatibilityMatrix
 │   │   │   └── layout/         # PublicLayout, DashboardLayout (Role-based route guards)
 │   │   ├── context/            # AuthContext (Persistent session & JWT token management)
 │   │   ├── pages/
@@ -426,7 +442,15 @@ All endpoints are prefixed with `/api/v1`.
 | `GET` | `/api/v1/inventory` | Private | Paginated list of inventory units with filters |
 | `GET` | `/api/v1/inventory/summary` | Private | Stock matrix by group/component and expiring-soon alerts |
 | `POST` | `/api/v1/inventory/units` | BloodBank | Add a new blood unit (auto-calculates expiry date) |
-| `PUT` | `/api/v1/inventory/units/:id` | BloodBank | Update unit status, storage location, or discard |
+| `PUT` | `/api/v1/inventory/units/:id` | BloodBank | Update unit status, storage location, or rack |
+| `PUT` | `/api/v1/inventory/units/:id/discard` | BloodBank | Log unit disposal with BloodNet discard reason and audit note |
+
+### In-App Notifications
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/notifications` | Private | Fetch real-time notifications and unread counter for current user/facility |
+| `PUT` | `/api/v1/notifications/:id/read` | Private | Mark a specific notification as read |
+| `PUT` | `/api/v1/notifications/mark-all-read` | Private | Mark all facility notifications as read |
 
 ### Hospital Requisitions & Issuance
 | Method | Endpoint | Access | Description |
@@ -493,6 +517,7 @@ erDiagram
 8. **`BloodIssue`**: Dispatch audit record (`issueId`, `bloodRequest`, `hospital`, `bloodBank`, `issuedUnits`, `coldChainVerification`, `recipientDetails`, `status`).
 9. **`Appointment`**: Visit schedule (`donor`, `bloodBank`, `appointmentDate`, `timeSlot`, `status`, `notes`).
 10. **`AuditLog`**: System compliance trail (`action`, `performedBy`, `role`, `entityType`, `entityId`, `details`, `timestamp`).
+11. **`Notification`**: Real-time in-app alerts (`recipientUser`, `recipientRole`, `recipientBloodBank`, `recipientHospital`, `type`, `title`, `message`, `priority`, `isRead`, `link`).
 
 ---
 

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import { LoadingSpinner, EmptyState } from '../../components/common/LoadingSpinner';
 import { Calendar, CheckCircle2, XCircle, Clock, User } from 'lucide-react';
 
 const BankAppointmentsPage = () => {
+  const { toast } = useToast();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,9 +28,10 @@ const BankAppointmentsPage = () => {
   const handleStatusChange = async (id, status) => {
     try {
       await api.put(`/appointments/${id}/status`, { status });
+      toast.success(`Appointment marked as ${status}.`);
       fetchAppointments();
     } catch (err) {
-      alert(err.message || 'Failed to update appointment status.');
+      toast.error(err.message || 'Failed to update appointment status.');
     }
   };
 

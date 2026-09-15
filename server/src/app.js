@@ -7,6 +7,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const requestRoutes = require('./routes/requestRoutes');
 const donationRoutes = require('./routes/donationRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
@@ -65,6 +66,7 @@ app.use('/api/v1/inventory', inventoryRoutes);
 app.use('/api/v1/requests', requestRoutes);
 app.use('/api/v1/donations', donationRoutes);
 app.use('/api/v1/appointments', appointmentRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/public', publicRoutes);
 app.use('/api/v1/admin', adminRoutes);
 

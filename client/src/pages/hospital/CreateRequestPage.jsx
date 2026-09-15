@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { PlusCircle, AlertTriangle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { PlusCircle, AlertTriangle, ArrowRight, ShieldCheck, Clock, Zap, CheckCircle2 } from 'lucide-react';
 
 const CreateRequestPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [bloodBanks, setBloodBanks] = useState([]);
   const [bloodBankId, setBloodBankId] = useState('');
   const [patientName, setPatientName] = useState('');
@@ -56,9 +58,11 @@ const CreateRequestPage = () => {
         requiredByDate: requiredByDate || undefined,
       });
 
+      toast.success(`Transfusion requisition submitted successfully (${urgency} priority).`);
       navigate('/hospital/requests');
     } catch (err) {
       setError(err.message || 'Failed to submit clinical request.');
+      toast.error(err.message || 'Failed to submit clinical request.');
     } finally {
       setLoading(false);
     }
@@ -226,43 +230,82 @@ const CreateRequestPage = () => {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
               Transfusion Specifics & Urgency Triage
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5">
-                  Blood Component
-                </label>
-                <select
-                  value={componentType}
-                  onChange={(e) => setComponentType(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-blood-500 focus:outline-none"
-                >
-                  {components.map((comp) => (
-                    <option key={comp} value={comp}>
-                      {comp}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5">
+                Blood Component
+              </label>
+              <select
+                value={componentType}
+                onChange={(e) => setComponentType(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-blood-500 focus:outline-none"
+              >
+                {components.map((comp) => (
+                  <option key={comp} value={comp}>
+                    {comp}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5">
-                  Clinical Urgency Level
-                </label>
-                <select
-                  value={urgency}
-                  onChange={(e) => setUrgency(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                    urgency === 'Emergency'
-                      ? 'border-red-400 bg-red-50 text-red-700'
-                      : urgency === 'Urgent'
-                      ? 'border-amber-400 bg-amber-50 text-amber-800'
-                      : 'border-slate-300 bg-slate-50 text-slate-800'
+            {/* Urgency Triage Level Selector */}
+            <div className="mt-4">
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-2">
+                Clinical Urgency Triage (Australian BloodNet / NHSBT Protocol)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div
+                  onClick={() => setUrgency('Routine')}
+                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
+                    urgency === 'Routine'
+                      ? 'border-slate-800 bg-slate-50 shadow-sm'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
                   }`}
                 >
-                  <option value="Routine">Routine (Within 24-48 hours)</option>
-                  <option value="Urgent">Urgent (Within 6-12 hours)</option>
-                  <option value="Emergency">Emergency (Immediate / Transfusion Ready &lt;2 hours)</option>
-                </select>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900">Routine</span>
+                    <Clock className="w-4 h-4 text-slate-500" />
+                  </div>
+                  <div className="text-[11px] font-bold text-slate-600 mt-1">Target: &lt;24–48 Hours</div>
+                  <p className="text-[10px] text-slate-500 mt-1 leading-snug">
+                    Elective surgeries, stable chronic anemia, standard cross-match queue.
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setUrgency('Urgent')}
+                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
+                    urgency === 'Urgent'
+                      ? 'border-amber-500 bg-amber-50/70 shadow-sm'
+                      : 'border-slate-200 hover:border-amber-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-900">Urgent</span>
+                    <Clock className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <div className="text-[11px] font-bold text-amber-700 mt-1">Target: &lt;6–12 Hours</div>
+                  <p className="text-[10px] text-slate-600 mt-1 leading-snug">
+                    Inpatient clinical deterioration, urgent surgery scheduled today.
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setUrgency('Emergency')}
+                  className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all ${
+                    urgency === 'Emergency'
+                      ? 'border-red-600 bg-red-50 shadow-sm ring-1 ring-red-500'
+                      : 'border-slate-200 hover:border-red-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-red-900">Emergency (STAT)</span>
+                    <Zap className="w-4 h-4 text-red-600" />
+                  </div>
+                  <div className="text-[11px] font-bold text-red-700 mt-1">Target: &lt;2 Hours</div>
+                  <p className="text-[10px] text-slate-600 mt-1 leading-snug">
+                    Life-threatening massive hemorrhage, trauma code, STAT uncrossmatched issue.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -278,6 +321,21 @@ const CreateRequestPage = () => {
                 placeholder="e.g. Severe intra-operative hemorrhage during emergency laparotomy, estimated blood loss > 1500ml."
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-blood-500 focus:outline-none"
               />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5">
+                Required Transfusion Deadline (Optional)
+              </label>
+              <input
+                type="datetime-local"
+                value={requiredByDate}
+                onChange={(e) => setRequiredByDate(e.target.value)}
+                className="w-full sm:w-72 px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-blood-500 focus:outline-none"
+              />
+              <span className="block text-[10px] text-slate-400 mt-1">
+                Leave blank to automatically apply dispatch target based on triage priority.
+              </span>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from './NotificationBell';
 import { HeartPulse, Menu, X, User, LogOut, LayoutDashboard, Search, Building2, BookOpen } from 'lucide-react';
 
 const Navbar = () => {
@@ -58,22 +59,17 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blood-700 to-blood-500 flex items-center justify-center text-white shadow-md shadow-blood-500/20 group-hover:scale-105 transition-transform">
-              <HeartPulse className="w-6 h-6 animate-pulse-subtle" />
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-red-600 flex items-center justify-center text-white">
+              <HeartPulse className="w-5 h-5" />
             </div>
-            <div>
-              <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-blood-700 to-blood-600 bg-clip-text text-transparent">
-                Pulse Point
-              </span>
-              <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-wider text-medical-600 bg-medical-50 px-1.5 py-0.5 rounded ml-2 border border-medical-200">
-                Healthcare Network
-              </span>
-            </div>
+            <span className="text-xl font-bold tracking-tight text-slate-900">
+              Pulse Point
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+          <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
               return (
@@ -82,7 +78,7 @@ const Navbar = () => {
                   to={link.path}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-blood-50 text-blood-700 font-semibold'
+                      ? 'bg-red-50 text-red-700 font-semibold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
@@ -95,14 +91,15 @@ const Navbar = () => {
           {/* User Auth Actions (Desktop) */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <NotificationBell />
                 <Link
                   to={getDashboardPath()}
                   className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors border border-slate-200"
                 >
-                  <LayoutDashboard className="w-4 h-4 text-blood-600" />
+                  <LayoutDashboard className="w-4 h-4 text-red-600" />
                   <span>Dashboard</span>
-                  <span className="text-xs bg-white text-blood-700 px-1.5 py-0.5 rounded font-semibold border border-slate-200">
+                  <span className="text-xs bg-white text-slate-700 px-1.5 py-0.5 rounded font-semibold border border-slate-200">
                     {getRoleLabel()}
                   </span>
                 </Link>
@@ -124,7 +121,7 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blood-600 hover:bg-blood-700 rounded-lg shadow-sm shadow-blood-600/20 transition-all hover:shadow-md"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                 >
                   Register Donor
                 </Link>
@@ -132,8 +129,9 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex md:hidden items-center">
+          {/* Mobile menu button & notifications */}
+          <div className="flex md:hidden items-center gap-1.5">
+            {isAuthenticated && <NotificationBell />}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none"

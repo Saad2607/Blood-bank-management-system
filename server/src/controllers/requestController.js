@@ -2,6 +2,7 @@ const BloodRequest = require('../models/BloodRequest');
 const BloodInventory = require('../models/BloodInventory');
 const BloodIssue = require('../models/BloodIssue');
 const AuditLog = require('../models/AuditLog');
+const Notification = require('../models/Notification');
 const { isBloodCompatible, generateId } = require('../services/compatibilityService');
 
 // @desc    Create a new blood request (Hospital Staff)
@@ -84,6 +85,21 @@ const createBloodRequest = async (req, res, next) => {
       },
       ipAddress: req.ip || '127.0.0.1',
     });
+
+    // Create In-App Notification for the receiving Blood Bank
+    try {
+      await Notification.create({
+        recipientRole: 'bloodbank',
+        recipientBloodBank: bloodBankId,
+        type: urgency === 'Emergency' ? 'URGENT_REQUEST' : 'REQUEST_STATUS_UPDATE',
+        title: `${urgency === 'Emergency' ? '🚨 EMERGENCY' : urgency === 'Urgent' ? '⚠️ URGENT' : 'New'} Request: ${unitsRequested}x ${bloodGroup} ${componentType}`,
+        message: `Order ${requestId} submitted by hospital. Urgency triage: ${urgency}. Diagnosis: ${clinicalDiagnosis || 'Standard'}.`,
+        priority: urgency === 'Emergency' ? 'emergency' : urgency === 'Urgent' ? 'urgent' : 'routine',
+        link: '/bloodbank/requests',
+      });
+    } catch (notifErr) {
+      console.error('Notification create error:', notifErr.message);
+    }
 
     res.status(201).json({
       success: true,
@@ -259,6 +275,21 @@ const approveBloodRequest = async (req, res, next) => {
       ipAddress: req.ip || '127.0.0.1',
     });
 
+    // Send In-App Notification to Requesting Hospital
+    try {
+      await Notification.create({
+        recipientRole: 'hospital',
+        recipientHospital: bloodRequest.hospital,
+        type: 'REQUEST_STATUS_UPDATE',
+        title: `Requisition Approved: ${bloodRequest.requestId}`,
+        message: `${allocatedUnitIds.length} compatible unit(s) cross-matched and reserved by blood bank. Ready for packaging.`,
+        priority: bloodRequest.urgency === 'Emergency' ? 'emergency' : 'routine',
+        link: '/hospital/requests',
+      });
+    } catch (notifErr) {
+      console.error('Notification create error:', notifErr.message);
+    }
+
     res.status(200).json({
       success: true,
       message: `Request ${bloodRequest.requestId} approved. ${allocatedUnitIds.length} unit(s) reserved.`,
@@ -402,6 +433,21 @@ const issueBloodUnits = async (req, res, next) => {
       ipAddress: req.ip || '127.0.0.1',
     });
 
+    // Send In-App Notification to Hospital on Dispatch
+    try {
+      await Notification.create({
+        recipientRole: 'hospital',
+        recipientHospital: bloodRequest.hospital,
+        type: 'REQUEST_STATUS_UPDATE',
+        title: `Cold-Chain Dispatch: ${bloodRequest.requestId}`,
+        message: `Units packaged and dispatched at ${temperatureAtDispatchCelsius}°C. Transport box verified sealed. Courier: ${recipientStaffName}. Issue ID: ${issueId}.`,
+        priority: bloodRequest.urgency === 'Emergency' ? 'emergency' : 'routine',
+        link: '/hospital/received',
+      });
+    } catch (notifErr) {
+      console.error('Notification create error:', notifErr.message);
+    }
+
     res.status(201).json({
       success: true,
       message: `Blood units issued successfully. Issue ID: ${issueId}`,
@@ -433,6 +479,83 @@ const getHospitalIssuedRecords = async (req, res, next) => {
   }
 };
 
+// @desc    Confirm delivery of issued blood units (Hospital Staff)
+// @route   PUT /api/v1/requests/:id/deliver
+// @access  Private (Hospital, SuperAdmin)
+const confirmDelivery = async (req, res, next) => {
+  try {
+    const { receivedTemperatureCelsius = 4.2, packagingIntact = true, bedsideVerificationNotes = '' } = req.body;
+    const bloodRequest = await BloodRequest.findById(req.params.id);
+
+    if (!bloodRequest) {
+      return res.status(404).json({ success: false, message: 'Blood request not found' });
+    }
+
+    if (bloodRequest.status !== 'issued') {
+      return res.status(400).json({
+        success: false,
+        message: `Request must be in 'issued' status to confirm delivery. Current status is '${bloodRequest.status}'.`,
+      });
+    }
+
+    bloodRequest.status = 'delivered';
+    await bloodRequest.save();
+
+    // Update BloodIssue record to 'Delivered'
+    const bloodIssue = await BloodIssue.findOne({ bloodRequest: bloodRequest._id });
+    if (bloodIssue) {
+      bloodIssue.status = 'Delivered';
+      await bloodIssue.save();
+    }
+
+    // Update allocated inventory units to 'transfused'
+    if (bloodRequest.allocatedUnits && bloodRequest.allocatedUnits.length > 0) {
+      await BloodInventory.updateMany(
+        { _id: { $in: bloodRequest.allocatedUnits } },
+        { $set: { status: 'transfused' } }
+      );
+    }
+
+    await AuditLog.create({
+      action: 'BLOOD_DELIVERY_CONFIRMED',
+      performedBy: req.user._id,
+      performedByName: req.user.name,
+      role: req.user.role,
+      entityType: 'BloodRequest',
+      entityId: bloodRequest.requestId,
+      details: {
+        receivedTemperatureCelsius,
+        packagingIntact,
+        bedsideVerificationNotes,
+      },
+      ipAddress: req.ip || '127.0.0.1',
+    });
+
+    // Notify Blood Bank
+    try {
+      await Notification.create({
+        recipientRole: 'bloodbank',
+        recipientBloodBank: bloodRequest.bloodBank,
+        type: 'REQUEST_STATUS_UPDATE',
+        title: `Delivery Confirmed: ${bloodRequest.requestId}`,
+        message: `Hospital verified receipt and bedside delivery. Transport temperature: ${receivedTemperatureCelsius}°C.`,
+        priority: 'routine',
+        link: '/bloodbank/requests',
+      });
+    } catch (notifErr) {
+      console.error('Notification create error:', notifErr.message);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Delivery confirmed and verified for ${bloodRequest.requestId}. Transfusion completed.`,
+      data: bloodRequest,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createBloodRequest,
   getHospitalRequests,
@@ -442,4 +565,5 @@ module.exports = {
   rejectBloodRequest,
   issueBloodUnits,
   getHospitalIssuedRecords,
+  confirmDelivery,
 };

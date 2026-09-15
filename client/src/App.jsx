@@ -35,6 +35,9 @@ import BankAppointmentsPage from './pages/bloodbank/BankAppointmentsPage';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminRequestsPage from './pages/admin/AdminRequestsPage';
+import AdminInventoryPage from './pages/admin/AdminInventoryPage';
+import AdminDonorsPage from './pages/admin/AdminDonorsPage';
 import ManageHospitalsPage from './pages/admin/ManageHospitalsPage';
 import ManageBloodBanksPage from './pages/admin/ManageBloodBanksPage';
 import UserDirectoryPage from './pages/admin/UserDirectoryPage';
@@ -84,6 +87,9 @@ function App() {
       {/* Super Admin Portal */}
       <Route element={<DashboardLayout allowedRoles={['superadmin']} />}>
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/hospital-orders" element={<AdminRequestsPage />} />
+        <Route path="/admin/inventory" element={<AdminInventoryPage />} />
+        <Route path="/admin/donors" element={<AdminDonorsPage />} />
         <Route path="/admin/hospitals" element={<ManageHospitalsPage />} />
         <Route path="/admin/blood-banks" element={<ManageBloodBanksPage />} />
         <Route path="/admin/users" element={<UserDirectoryPage />} />

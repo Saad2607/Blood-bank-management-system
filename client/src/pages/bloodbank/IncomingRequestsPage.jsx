@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import StatusBadge from '../../components/common/StatusBadge';
 import BloodBadge from '../../components/common/BloodBadge';
 import { LoadingSpinner, EmptyState } from '../../components/common/LoadingSpinner';
@@ -21,6 +22,7 @@ const IncomingRequestsPage = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [urgencyFilter, setUrgencyFilter] = useState(searchParams.get('urgency') || 'All');
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   // Issue Modal State
   const [showIssueModal, setShowIssueModal] = useState(false);
@@ -36,6 +38,7 @@ const IncomingRequestsPage = () => {
   const [rejectionReason, setRejectionReason] = useState('');
 
   const [processing, setProcessing] = useState(false);
+  const [approvingId, setApprovingId] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   const fetchRequests = async () => {
@@ -61,19 +64,21 @@ const IncomingRequestsPage = () => {
 
   // Handle Approve & Allocate
   const handleApprove = async (reqId) => {
-    if (!window.confirm('Approve request and allocate compatible units from active inventory?'))
-      return;
+    setApprovingId(reqId);
     setProcessing(true);
     setMessage({ type: '', text: '' });
 
     try {
       const res = await api.put(`/requests/${reqId}/approve`);
       setMessage({ type: 'success', text: res.data.message });
+      toast.success(res.data.message || 'Requisition approved and compatible units reserved.');
       fetchRequests();
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
+      toast.error(err.message || 'Failed to approve requisition.');
     } finally {
       setProcessing(false);
+      setApprovingId(null);
     }
   };
 
@@ -88,11 +93,13 @@ const IncomingRequestsPage = () => {
         rejectionReason,
       });
       setMessage({ type: 'success', text: res.data.message });
+      toast.info('Requisition has been rejected.');
       setShowRejectModal(false);
       setRejectionReason('');
       fetchRequests();
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
+      toast.error(err.message || 'Failed to reject requisition.');
     } finally {
       setProcessing(false);
     }
@@ -114,10 +121,12 @@ const IncomingRequestsPage = () => {
       });
 
       setMessage({ type: 'success', text: res.data.message });
+      toast.success(res.data.message || 'Blood units issued with cold-chain verification audit.');
       setShowIssueModal(false);
       fetchRequests();
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
+      toast.error(err.message || 'Failed to issue blood units.');
     } finally {
       setProcessing(false);
     }
@@ -166,6 +175,7 @@ const IncomingRequestsPage = () => {
             <option value="pending">Pending Review</option>
             <option value="approved">Approved (Reserved)</option>
             <option value="issued">Issued / Dispatched</option>
+            <option value="delivered">Delivered / Completed</option>
             <option value="rejected">Rejected</option>
           </select>
         </div>
@@ -241,10 +251,17 @@ const IncomingRequestsPage = () => {
                           <>
                             <button
                               onClick={() => handleApprove(req._id)}
-                              disabled={processing}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs transition-all"
+                              disabled={processing || approvingId === req._id}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 shadow-xs transition-all inline-flex items-center gap-1.5"
                             >
-                              Approve & Allocate
+                              {approvingId === req._id ? (
+                                <>
+                                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+                                  <span>Allocating...</span>
+                                </>
+                              ) : (
+                                <span>Approve & Allocate</span>
+                              )}
                             </button>
                             <button
                               onClick={() => {
@@ -274,7 +291,15 @@ const IncomingRequestsPage = () => {
                         )}
 
                         {req.status === 'issued' && (
-                          <span className="text-[11px] font-bold text-slate-400 uppercase">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700">
+                            <Truck className="w-3 h-3" />
+                            In Transit
+                          </span>
+                        )}
+
+                        {req.status === 'delivered' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-teal-50 text-teal-700">
+                            <CheckCircle2 className="w-3 h-3" />
                             Delivered
                           </span>
                         )}

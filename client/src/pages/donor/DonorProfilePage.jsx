@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import { User, Phone, MapPin, Droplets, CheckCircle2, Save } from 'lucide-react';
 
 const DonorProfilePage = () => {
   const { user, updateUser } = useAuth();
+  const { toast } = useToast();
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [city, setCity] = useState(user?.city || 'Mumbai');
@@ -30,9 +32,11 @@ const DonorProfilePage = () => {
         weightKg: Number(weightKg),
       });
       setSaved(true);
+      toast.success('Donor profile updated successfully!');
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       setError(err.message || 'Failed to update profile.');
+      toast.error(err.message || 'Failed to update profile.');
     } finally {
       setSaving(false);
     }

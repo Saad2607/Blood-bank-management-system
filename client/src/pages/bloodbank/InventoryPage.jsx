@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import BloodBadge from '../../components/common/BloodBadge';
 import StatusBadge from '../../components/common/StatusBadge';
 import { LoadingSpinner, EmptyState } from '../../components/common/LoadingSpinner';
 import { Boxes, Plus, Search, Trash2, AlertTriangle, CheckCircle2, Thermometer } from 'lucide-react';
 
 const InventoryPage = () => {
+  const { toast } = useToast();
   const [units, setUnits] = useState([]);
   const [bloodGroup, setBloodGroup] = useState('All');
   const [componentType, setComponentType] = useState('All');
@@ -65,26 +67,48 @@ const InventoryPage = () => {
         rack: addRack || undefined,
       });
 
-      setSuccess('Blood unit added to active inventory with automatic expiry tracking.');
+      toast.success('Blood unit added to active inventory with automatic expiry tracking.');
       setShowAddModal(false);
       fetchUnits();
     } catch (err) {
       setError(err.message || 'Failed to add blood unit.');
+      toast.error(err.message || 'Failed to add blood unit.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleDiscardUnit = async (id, unitId) => {
-    if (!window.confirm(`Are you sure you want to mark unit ${unitId} as DISCARDED?`)) return;
+  // Discard Modal State & Handlers
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [discardTargetUnit, setDiscardTargetUnit] = useState(null);
+  const [discardReason, setDiscardReason] = useState('outdated');
+  const [discardNotes, setDiscardNotes] = useState('');
+  const [discarding, setDiscarding] = useState(false);
+
+  const handleOpenDiscard = (unit) => {
+    setDiscardTargetUnit(unit);
+    setDiscardReason('outdated');
+    setDiscardNotes('');
+    setShowDiscardModal(true);
+  };
+
+  const handleConfirmDiscard = async (e) => {
+    e.preventDefault();
+    if (!discardTargetUnit) return;
+    setDiscarding(true);
     try {
-      await api.put(`/inventory/units/${id}`, {
-        status: 'discarded',
-        testStatus: 'reactive_discarded',
+      await api.put(`/inventory/units/${discardTargetUnit._id}/discard`, {
+        discardReason,
+        discardNotes,
       });
+      toast.success(`Unit ${discardTargetUnit.unitId} safely logged as DISCARDED (${discardReason}).`);
+      setShowDiscardModal(false);
+      setDiscardTargetUnit(null);
       fetchUnits();
     } catch (err) {
-      alert(err.message || 'Failed to discard unit.');
+      toast.error(err.message || 'Failed to log unit disposal.');
+    } finally {
+      setDiscarding(false);
     }
   };
 
@@ -241,15 +265,21 @@ const InventoryPage = () => {
                       </td>
                       <td className="py-3 px-4">
                         <StatusBadge status={unit.status} />
+                        {unit.status === 'discarded' && unit.discardReason && (
+                          <span className="block text-[10px] text-red-600 font-bold capitalize mt-0.5">
+                            {unit.discardReason.replace('_', ' ')}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-right">
                         {unit.status === 'available' && (
                           <button
-                            onClick={() => handleDiscardUnit(unit._id, unit.unitId)}
-                            title="Discard contaminated/hemolyzed unit"
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={() => handleOpenDiscard(unit)}
+                            title="Clinical safe disposal & wastage log"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center gap-1"
                           >
                             <Trash2 className="w-4 h-4" />
+                            <span className="text-[11px] font-bold text-red-600 hidden sm:inline">Discard</span>
                           </button>
                         )}
                       </td>
@@ -373,6 +403,109 @@ const InventoryPage = () => {
                   className="px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-blood-600 hover:bg-blood-700 shadow-sm transition-all"
                 >
                   {submitting ? 'Generating Barcode...' : 'Add Unit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Australian BloodNet Clinical Discard Modal */}
+      {showDiscardModal && discardTargetUnit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-red-600">
+                  Clinical Discard & Wastage Protocol
+                </span>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Discard Unit #{discardTargetUnit.unitId}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowDiscardModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-800 space-y-1">
+              <div className="font-bold flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>Irreversible Biosecurity Disposal</span>
+              </div>
+              <p className="text-[11px] text-red-700 leading-snug">
+                This will remove the unit from available clinical stock and record a permanent audit entry in the BloodNet compliance registry.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 p-3 rounded-xl text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Blood Group:</span>
+                <span className="font-bold text-slate-900">{discardTargetUnit.bloodGroup}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Component:</span>
+                <span className="font-bold text-slate-900">{discardTargetUnit.componentType}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Expiry Date:</span>
+                <span className="font-semibold text-slate-900">
+                  {new Date(discardTargetUnit.expiryDate).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmDiscard} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5">
+                  Discard Reason (BloodNet Standard)
+                </label>
+                <select
+                  value={discardReason}
+                  onChange={(e) => setDiscardReason(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none"
+                >
+                  <option value="outdated">Outdated / Shelf-Life Expired</option>
+                  <option value="temperature_breach">Temperature Breach (Cold-Chain Excursion)</option>
+                  <option value="hemolyzed">Hemolyzed / Discolored Plasma</option>
+                  <option value="seropositive">Seropositive / Reactive Test Marker</option>
+                  <option value="seal_broken">Seal Broken / Leaking Bag Integrity</option>
+                  <option value="clotted">Clotted / Micro-Aggregated</option>
+                  <option value="other">Other Laboratory Reason</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-600 mb-1.5">
+                  Clinical Disposal Notes & Laboratory Observations
+                </label>
+                <textarea
+                  value={discardNotes}
+                  onChange={(e) => setDiscardNotes(e.target.value)}
+                  required
+                  rows="3"
+                  placeholder="e.g. Unit expired on shelf 4B; visual check shows no bacterial growth; incinerated in biohazard bin."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDiscardModal(false)}
+                  className="px-4 py-2 rounded-xl font-bold text-xs text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={discarding}
+                  className="px-5 py-2 rounded-xl font-bold text-xs text-white bg-red-600 hover:bg-red-700 shadow-sm transition-all"
+                >
+                  {discarding ? 'Logging Discard...' : 'Confirm Safe Disposal'}
                 </button>
               </div>
             </form>

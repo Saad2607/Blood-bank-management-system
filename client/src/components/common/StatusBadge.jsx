@@ -38,10 +38,15 @@ const StatusBadge = ({ status, type = 'status' }) => {
         </span>
       );
     case 'issued':
-    case 'delivered':
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
           Issued
+        </span>
+      );
+    case 'delivered':
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+          Delivered
         </span>
       );
     case 'pending':

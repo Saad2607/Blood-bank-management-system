@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import { LoadingSpinner, EmptyState } from '../../components/common/LoadingSpinner';
 import { Droplets, Plus, Phone, MapPin, ShieldCheck, CheckCircle2, Clock } from 'lucide-react';
 
 const ManageBloodBanksPage = () => {
+  const { toast } = useToast();
   const [bloodBanks, setBloodBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -62,11 +64,12 @@ const ManageBloodBanksPage = () => {
         componentSeparationAvailable: true,
       });
 
-      setSuccess(`Blood Bank ${name} registered successfully.`);
+      toast.success(`Blood Bank "${name}" registered successfully.`);
       setShowModal(false);
       fetchBloodBanks();
     } catch (err) {
       setError(err.message || 'Failed to register blood bank.');
+      toast.error(err.message || 'Failed to register blood bank.');
     } finally {
       setSubmitting(false);
     }

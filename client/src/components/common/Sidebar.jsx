@@ -25,6 +25,9 @@ const Sidebar = () => {
     if (isAdmin) {
       return [
         { name: 'System Overview', path: '/admin', icon: LayoutDashboard, end: true },
+        { name: 'Hospital Orders', path: '/admin/hospital-orders', icon: ClipboardList },
+        { name: 'Global Inventory', path: '/admin/inventory', icon: Boxes },
+        { name: 'Donors & Collections', path: '/admin/donors', icon: Heart },
         { name: 'Manage Hospitals', path: '/admin/hospitals', icon: Building2 },
         { name: 'Manage Blood Banks', path: '/admin/blood-banks', icon: Droplets },
         { name: 'User Directory', path: '/admin/users', icon: Users },

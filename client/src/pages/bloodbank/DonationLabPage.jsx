@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import BloodBadge from '../../components/common/BloodBadge';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { FlaskConical, CheckCircle2, ShieldCheck, Heart, AlertCircle, Droplets } from 'lucide-react';
 
 const DonationLabPage = () => {
+  const { toast } = useToast();
   const [users, setUsers] = useState([]);
   const [selectedDonorId, setSelectedDonorId] = useState('');
   const [bloodGroup, setBloodGroup] = useState('O+');
@@ -63,8 +65,10 @@ const DonationLabPage = () => {
       });
 
       setResult(res.data);
+      toast.success(res.data.message || 'Donation logged and units separated into active inventory!');
     } catch (err) {
       setError(err.message || 'Collection logging failed.');
+      toast.error(err.message || 'Collection logging failed.');
     } finally {
       setSubmitting(false);
     }

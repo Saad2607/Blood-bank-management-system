@@ -9,6 +9,7 @@ const {
   rejectBloodRequest,
   issueBloodUnits,
   getHospitalIssuedRecords,
+  confirmDelivery,
 } = require('../controllers/requestController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
@@ -21,5 +22,6 @@ router.get('/:id', protect, getRequestById);
 router.put('/:id/approve', protect, authorize('bloodbank'), approveBloodRequest);
 router.put('/:id/reject', protect, authorize('bloodbank'), rejectBloodRequest);
 router.post('/:id/issue', protect, authorize('bloodbank'), issueBloodUnits);
+router.put('/:id/deliver', protect, authorize('hospital', 'superadmin'), confirmDelivery);
 
 module.exports = router;

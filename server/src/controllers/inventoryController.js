@@ -292,9 +292,67 @@ const updateBloodUnit = async (req, res, next) => {
   }
 };
 
+// @desc    Discard contaminated, outdated, or damaged blood unit
+// @route   PUT /api/v1/inventory/units/:id/discard
+// @access  Private (BloodBank, SuperAdmin)
+const discardBloodUnit = async (req, res, next) => {
+  try {
+    const { discardReason, discardNotes } = req.body;
+
+    const unit = await BloodInventory.findById(req.params.id);
+    if (!unit) {
+      return res.status(404).json({ success: false, message: 'Blood unit not found' });
+    }
+
+    if (
+      req.user.role === 'bloodbank' &&
+      unit.bloodBank.toString() !== (req.user.bloodBank?._id || req.user.bloodBank).toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only discard blood units belonging to your blood bank.',
+      });
+    }
+
+    unit.status = 'discarded';
+    unit.discardReason = discardReason || 'other';
+    unit.discardDate = new Date();
+    unit.discardNotes = discardNotes || '';
+    unit.discardedBy = req.user._id;
+
+    await unit.save();
+
+    await AuditLog.create({
+      action: 'BLOOD_UNIT_DISCARDED',
+      performedBy: req.user._id,
+      performedByName: req.user.name,
+      role: req.user.role,
+      entityType: 'BloodInventory',
+      entityId: unit.unitId,
+      details: {
+        unitId: unit.unitId,
+        bloodGroup: unit.bloodGroup,
+        componentType: unit.componentType,
+        discardReason: unit.discardReason,
+        discardNotes,
+      },
+      ipAddress: req.ip || '127.0.0.1',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Unit ${unit.unitId} has been safely logged as discarded.`,
+      data: unit,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getInventory,
   getInventorySummary,
   addBloodUnit,
   updateBloodUnit,
+  discardBloodUnit,
 };

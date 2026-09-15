@@ -7,6 +7,12 @@ const {
   createBloodBank,
   createHospital,
   getAuditLogs,
+  getAllRequests,
+  overrideRequestStatus,
+  getAllInventory,
+  overrideUnitStatus,
+  getDonorsAndCollections,
+  overrideAppointmentStatus,
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
@@ -21,4 +27,17 @@ router.post('/blood-banks', createBloodBank);
 router.post('/hospitals', createHospital);
 router.get('/audit-logs', getAuditLogs);
 
+// Hospital requisitions oversight
+router.get('/requests', getAllRequests);
+router.put('/requests/:id/override', overrideRequestStatus);
+
+// Global inventory oversight
+router.get('/inventory', getAllInventory);
+router.put('/inventory/units/:id/status', overrideUnitStatus);
+
+// Donor & collections oversight
+router.get('/donors-overview', getDonorsAndCollections);
+router.put('/appointments/:id/status', overrideAppointmentStatus);
+
 module.exports = router;
+

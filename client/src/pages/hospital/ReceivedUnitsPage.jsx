@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import BloodBadge from '../../components/common/BloodBadge';
 import { LoadingSpinner, EmptyState } from '../../components/common/LoadingSpinner';
 import { PackageCheck, ShieldCheck, Thermometer, Building2 } from 'lucide-react';
@@ -7,18 +8,39 @@ import { PackageCheck, ShieldCheck, Thermometer, Building2 } from 'lucide-react'
 const ReceivedUnitsPage = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmingId, setConfirmingId] = useState(null);
+  const { toast } = useToast();
+
+  const fetchIssues = async () => {
+    try {
+      const res = await api.get('/requests/issues/hospital');
+      setIssues(res.data.data || []);
+    } catch (err) {
+      console.error('Error fetching issued records:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmDelivery = async (requestId) => {
+    if (!requestId) return;
+    setConfirmingId(requestId);
+    try {
+      const res = await api.put(`/requests/${requestId}/deliver`, {
+        receivedTemperatureCelsius: 4.2,
+        packagingIntact: true,
+        bedsideVerificationNotes: 'Acknowledged & received by Hospital Staff',
+      });
+      toast.success(res.data.message || 'Delivery confirmed! Transfusion units verified.');
+      fetchIssues();
+    } catch (err) {
+      toast.error(err.message || 'Failed to confirm delivery.');
+    } finally {
+      setConfirmingId(null);
+    }
+  };
 
   useEffect(() => {
-    const fetchIssues = async () => {
-      try {
-        const res = await api.get('/requests/issues/hospital');
-        setIssues(res.data.data || []);
-      } catch (err) {
-        console.error('Error fetching issued records:', err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchIssues();
   }, []);
 
@@ -58,10 +80,21 @@ const ReceivedUnitsPage = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg border border-emerald-200">
-                    <ShieldCheck className="w-4 h-4" />
-                    Cold Chain Verified
-                  </span>
+                  {issue.status === 'Dispatched' ? (
+                    <button
+                      onClick={() => handleConfirmDelivery(issue.bloodRequest?._id || issue.bloodRequest)}
+                      disabled={confirmingId === (issue.bloodRequest?._id || issue.bloodRequest)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-xs"
+                    >
+                      <PackageCheck className="w-3.5 h-3.5" />
+                      <span>{confirmingId === (issue.bloodRequest?._id || issue.bloodRequest) ? 'Confirming...' : 'Acknowledge & Confirm Delivery'}</span>
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg border border-emerald-200">
+                      <ShieldCheck className="w-4 h-4" />
+                      Delivered &amp; Bedside Verified
+                    </span>
+                  )}
                 </div>
               </div>
 

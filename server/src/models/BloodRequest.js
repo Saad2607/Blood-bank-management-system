@@ -77,7 +77,7 @@ const bloodRequestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'issued', 'cancelled'],
+      enum: ['pending', 'approved', 'rejected', 'issued', 'delivered', 'cancelled'],
       default: 'pending',
       index: true,
     },

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HeartPulse, User, Mail, Lock, Phone, MapPin, Droplets, Building2, ArrowRight } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { HeartPulse, User, Mail, Lock, Phone, MapPin, Droplets, Building2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const RegisterPage = () => {
   const [role, setRole] = useState('donor');
@@ -14,10 +15,12 @@ const RegisterPage = () => {
   const [bloodGroup, setBloodGroup] = useState('O+');
   const [gender, setGender] = useState('Male');
   const [weightKg, setWeightKg] = useState(65);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { register } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleRegisterSubmit = async (e) => {
@@ -43,6 +46,7 @@ const RegisterPage = () => {
       }
 
       const user = await register(payload);
+      toast.success(`Account registered successfully! Welcome to Pulse Point, ${user.name}.`);
 
       // Route to appropriate dashboard
       if (user.role === 'donor') navigate('/donor');
@@ -51,6 +55,7 @@ const RegisterPage = () => {
       else navigate('/');
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
+      toast.error(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -59,32 +64,32 @@ const RegisterPage = () => {
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   return (
-    <div className="min-h-[85vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-[80vh] flex flex-col justify-center py-10 sm:px-6">
       <div className="sm:mx-auto sm:w-full sm:max-w-lg text-center">
-        <Link to="/" className="inline-flex items-center gap-2.5 group">
-          <div className="w-10 h-10 rounded-xl bg-blood-600 flex items-center justify-center text-white shadow-md shadow-blood-600/20 group-hover:scale-105 transition-transform">
-            <HeartPulse className="w-6 h-6 animate-pulse-subtle" />
+        <Link to="/" className="inline-flex items-center gap-2">
+          <div className="w-9 h-9 rounded-lg bg-red-600 flex items-center justify-center text-white">
+            <HeartPulse className="w-5 h-5" />
           </div>
-          <span className="text-2xl font-black text-slate-900 tracking-tight">Pulse Point</span>
+          <span className="text-xl font-bold text-slate-900">Pulse Point</span>
         </Link>
-        <h2 className="mt-4 text-2xl font-extrabold text-slate-900 tracking-tight">
-          Create Healthcare Account
+        <h2 className="mt-3 text-2xl font-bold text-slate-900">
+          Create Account
         </h2>
         <p className="mt-1 text-xs text-slate-500">
-          Join the clinical network as a voluntary donor, hospital team member, or blood bank technician.
+          Join the network as a voluntary donor, hospital staff, or blood bank technician.
         </p>
       </div>
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-lg px-4 sm:px-0">
+        <div className="bg-white py-6 px-6 sm:px-8 rounded-xl border border-slate-200 shadow-sm space-y-5">
           {/* Role Picker Tabs */}
-          <div className="flex rounded-xl bg-slate-100 p-1 text-xs font-bold">
+          <div className="flex rounded-lg bg-slate-100 p-1 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setRole('donor')}
-              className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1.5 ${
                 role === 'donor'
-                  ? 'bg-blood-600 text-white shadow-sm'
+                  ? 'bg-red-600 text-white font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -94,9 +99,9 @@ const RegisterPage = () => {
             <button
               type="button"
               onClick={() => setRole('hospital')}
-              className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1.5 ${
                 role === 'hospital'
-                  ? 'bg-medical-600 text-white shadow-sm'
+                  ? 'bg-blue-600 text-white font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -106,14 +111,14 @@ const RegisterPage = () => {
             <button
               type="button"
               onClick={() => setRole('bloodbank')}
-              className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-1.5 rounded-md transition-colors flex items-center justify-center gap-1.5 ${
                 role === 'bloodbank'
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-purple-600 text-white font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <HeartPulse className="w-3.5 h-3.5" />
-              <span>Blood Bank Staff</span>
+              <span>Blood Bank</span>
             </button>
           </div>
 
@@ -166,14 +171,26 @@ const RegisterPage = () => {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                     minLength={6}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-blood-500 focus:outline-none"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-blood-500 focus:outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 focus:outline-none p-0.5"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4 text-slate-600" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>

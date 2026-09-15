@@ -202,8 +202,28 @@ const runE2E = async () => {
           `✔ Blood issued successfully. Issue ID: ${issueRes.body.data.issueId}. Dispatch Temp: 3.8°C.`
         );
 
-        // STEP 9: Hospital Verifies Receipt of Delivered Unit
-        console.log('\n>>> Step 9: Hospital Verifies Delivered Blood Units');
+        // STEP 9: Hospital Verifies Receipt of Delivered Unit & Confirms Delivery
+        console.log('\n>>> Step 9: Hospital Verifies & Confirms Delivery');
+        const deliverRes = await request(
+          `/api/v1/requests/${createdRequestId}/deliver`,
+          'PUT',
+          { deliveryNotes: 'Received in good condition, cold-chain verified at ward.' },
+          hospToken
+        );
+        if (deliverRes.status !== 200) throw new Error(`Hospital deliver failed: ${JSON.stringify(deliverRes.body)}`);
+        console.log(`✔ Hospital confirmed delivery: status is now '${deliverRes.body.data.status}'.`);
+
+        // STEP 9b: Super Admin Overrides Requisition Status to 'delivered' (Validation check)
+        console.log('\n>>> Step 9b: Super Admin Status Override (Verify enum accepts delivered)');
+        const adminOverrideRes = await request(
+          `/api/v1/admin/requests/${createdRequestId}/override`,
+          'PUT',
+          { status: 'delivered', adminNotes: 'Admin verified delivered status.' },
+          adminToken
+        );
+        if (adminOverrideRes.status !== 200) throw new Error(`Admin override failed: ${JSON.stringify(adminOverrideRes.body)}`);
+        console.log(`✔ Admin override to 'delivered' verified successfully.`);
+
         const issuesRes = await request('/api/v1/requests/issues/hospital', 'GET', null, hospToken);
         console.log(
           `✔ Hospital received units confirmed: ${issuesRes.body.count} issue records on file.`

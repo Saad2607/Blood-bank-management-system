@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import { LoadingSpinner, EmptyState } from '../../components/common/LoadingSpinner';
 import { Calendar, Building2, Clock, CheckCircle2, XCircle, AlertCircle, Plus } from 'lucide-react';
 
 const AppointmentsPage = () => {
+  const { toast } = useToast();
   const [appointments, setAppointments] = useState([]);
   const [bloodBanks, setBloodBanks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,23 +56,24 @@ const AppointmentsPage = () => {
         timeSlot,
         notes,
       });
-      setSuccess('Appointment scheduled successfully!');
+      toast.success('Donation appointment scheduled successfully!');
       setShowModal(false);
       fetchAppointments();
     } catch (err) {
       setError(err.message || 'Failed to schedule appointment.');
+      toast.error(err.message || 'Failed to schedule appointment.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleCancelAppointment = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel this scheduled appointment?')) return;
     try {
       await api.put(`/appointments/${id}/status`, { status: 'Cancelled' });
+      toast.info('Appointment has been cancelled.');
       fetchAppointments();
     } catch (err) {
-      alert(err.message || 'Failed to cancel appointment.');
+      toast.error(err.message || 'Failed to cancel appointment.');
     }
   };
 

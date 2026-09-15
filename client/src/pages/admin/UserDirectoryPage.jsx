@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 import { LoadingSpinner, EmptyState } from '../../components/common/LoadingSpinner';
 import { Users, Search, CheckCircle, XCircle, Shield } from 'lucide-react';
 
 const UserDirectoryPage = () => {
+  const { toast } = useToast();
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState('All');
   const [search, setSearch] = useState('');
@@ -38,9 +40,10 @@ const UserDirectoryPage = () => {
   const handleToggleStatus = async (userId, currentStatus) => {
     try {
       await api.put(`/admin/users/${userId}/toggle-status`);
+      toast.success(`User account ${currentStatus ? 'deactivated' : 'activated'} successfully.`);
       fetchUsers();
     } catch (err) {
-      alert(err.message || 'Failed to toggle status.');
+      toast.error(err.message || 'Failed to toggle status.');
     }
   };
 

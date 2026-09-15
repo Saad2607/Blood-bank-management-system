@@ -14,6 +14,7 @@ const BloodDonation = require('../models/BloodDonation');
 const BloodRequest = require('../models/BloodRequest');
 const BloodIssue = require('../models/BloodIssue');
 const Appointment = require('../models/Appointment');
+const Notification = require('../models/Notification');
 const AuditLog = require('../models/AuditLog');
 
 const { calculateExpiryDate, generateId } = require('../services/compatibilityService');
@@ -39,6 +40,7 @@ const seedData = async () => {
     await BloodRequest.deleteMany();
     await BloodIssue.deleteMany();
     await Appointment.deleteMany();
+    await Notification.deleteMany();
     await AuditLog.deleteMany();
 
     console.log('Existing collections cleared.'.yellow);
@@ -376,7 +378,86 @@ const seedData = async () => {
 
     console.log('Appointments scheduled.'.green);
 
-    // 8. Create Initial Audit Logs
+    // 8. Seed Discarded Blood Units (Realistic Clinical Wastage Tracking)
+    await BloodInventory.create({
+      unitId: 'PPU-2026-99011',
+      bloodBank: metroBank._id,
+      bloodGroup: 'B-',
+      componentType: 'Packed Red Blood Cells (PRBC)',
+      volumeMl: 450,
+      collectionDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+      expiryDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // expired 3 days ago
+      storageLocation: { rack: 'RACK-DISCARD', shelf: 'Disposal-Bin-1', temperatureRange: '2°C to 6°C' },
+      status: 'discarded',
+      testStatus: 'screened_passed',
+      discardReason: 'outdated',
+      discardDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      discardNotes: 'PRBC reached 42-day shelf-life limit without requisitions. Disposed under biomedical protocol.',
+    });
+
+    await BloodInventory.create({
+      unitId: 'PPU-2026-99012',
+      bloodBank: metroBank._id,
+      bloodGroup: 'A+',
+      componentType: 'Platelet Concentrate',
+      volumeMl: 250,
+      collectionDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+      expiryDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      storageLocation: { rack: 'RACK-DISCARD', shelf: 'Disposal-Bin-2', temperatureRange: '20°C to 24°C' },
+      status: 'discarded',
+      testStatus: 'screened_passed',
+      discardReason: 'outdated',
+      discardDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      discardNotes: 'Platelet concentrate exceeded 5-day viability limit. Discarded according to safety guidelines.',
+    });
+
+    // 9. Seed In-App Notifications (Urgent orders, stock alerts, appointments)
+    await Notification.create([
+      {
+        recipientRole: 'bloodbank',
+        recipientBloodBank: metroBank._id,
+        type: 'URGENT_REQUEST',
+        title: '🚨 EMERGENCY: 2x O- PRBC Transfusion Order',
+        message: 'City General Hospital (Trauma ICU) submitted emergency requisition for acute polytrauma resuscitation.',
+        priority: 'emergency',
+        link: '/bloodbank/requests',
+        isRead: false,
+      },
+      {
+        recipientRole: 'bloodbank',
+        recipientBloodBank: metroBank._id,
+        type: 'EXPIRING_UNIT',
+        title: '⚠️ Expiry Alert: Platelet Unit PPU-2026-0004',
+        message: 'Platelet concentrate unit is within 48 hours of expiration. Prioritize for compatible requisitions.',
+        priority: 'urgent',
+        link: '/bloodbank/inventory',
+        isRead: false,
+      },
+      {
+        recipientRole: 'hospital',
+        recipientHospital: cityGenHospital._id,
+        type: 'REQUEST_STATUS_UPDATE',
+        title: 'Requisition Approved: REQ-2026-1002',
+        message: 'Metro Central Blood Center has approved and reserved 1 unit of A+ Whole Blood. Packaging in progress.',
+        priority: 'routine',
+        link: '/hospital/requests',
+        isRead: false,
+      },
+      {
+        recipientRole: 'donor',
+        recipientUser: donor1User._id,
+        type: 'APPOINTMENT_UPDATE',
+        title: 'Donation Appointment Confirmed',
+        message: 'Your appointment at Metro Central Blood Center is confirmed for tomorrow at 10:00 AM. Thank you for saving lives!',
+        priority: 'routine',
+        link: '/donor/appointments',
+        isRead: false,
+      },
+    ]);
+
+    console.log('Notifications and wastage tracking seeded.'.green);
+
+    // 10. Create Initial Audit Logs
     await AuditLog.create({
       action: 'SYSTEM_SEEDED',
       performedByName: 'Pulse Point Seeder Engine',

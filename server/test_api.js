@@ -119,6 +119,27 @@ const runTests = async () => {
         });
         console.log('Admin GET /admin/stats:', adminStats.status, adminStats.body.stats.users);
 
+        const adminRequests = await request('/api/v1/admin/requests', {
+          headers: { Authorization: `Bearer ${adminToken}` },
+        });
+        console.log('Admin GET /admin/requests:', adminRequests.status, `Total: ${adminRequests.body.total}, Found: ${adminRequests.body.count}`);
+
+        const adminInventory = await request('/api/v1/admin/inventory', {
+          headers: { Authorization: `Bearer ${adminToken}` },
+        });
+        console.log('Admin GET /admin/inventory:', adminInventory.status, `Total: ${adminInventory.body.total}, Available: ${adminInventory.body.stats.available}`);
+
+        const adminDonors = await request('/api/v1/admin/donors-overview', {
+          headers: { Authorization: `Bearer ${adminToken}` },
+        });
+        console.log('Admin GET /admin/donors-overview:', adminDonors.status, `Donors: ${adminDonors.body.donors.length}, Appointments: ${adminDonors.body.appointments.length}`);
+
+        console.log('\n--- 5. Testing In-App Notifications ---');
+        const notifs = await request('/api/v1/notifications', {
+          headers: { Authorization: `Bearer ${staffToken}` },
+        });
+        console.log('Staff GET /notifications:', notifs.status, `Found: ${notifs.body.count}, Unread: ${notifs.body.unreadCount}`);
+
         console.log('\n>>> ALL BACKEND API ENDPOINTS VERIFIED SUCCESSFULLY! <<<\n');
       } catch (err) {
         console.error('Test execution failed:', err);
